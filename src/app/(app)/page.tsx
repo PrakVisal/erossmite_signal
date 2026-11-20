@@ -18,7 +18,10 @@ const CHART_TFS = ["M1", "M5", "M15", "H1"];
 
 function beep() {
   try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const Ctx =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
     if (!Ctx) return;
     const ctx = new Ctx();
     const osc = ctx.createOscillator();
@@ -43,20 +46,34 @@ export default function Dashboard() {
   useEffect(() => {
     try {
       setSound(localStorage.getItem("xs_sound") === "1");
-    } catch { /* storage unavailable */ }
+    } catch {
+      /* storage unavailable */
+    }
   }, []);
 
   const modeQ = filter === "all" ? "" : `&mode=${filter}`;
-  const signals = usePoll<{ signals: Signal[] }>(`/api/signals?limit=40${modeQ}`, 5000);
-  const stats = usePoll<Stats>(`/api/stats${filter === "all" ? "" : `?mode=${filter}`}`, 15000);
+  const signals = usePoll<{ signals: Signal[] }>(
+    `/api/signals?limit=40${modeQ}`,
+    5000,
+  );
+  const stats = usePoll<Stats>(
+    `/api/stats${filter === "all" ? "" : `?mode=${filter}`}`,
+    15000,
+  );
 
   const list = signals.data?.signals ?? [];
   const selected = list.find((s) => s.id === selId) ?? list[0] ?? null;
   const tf = tfPick ?? selected?.entry_tf ?? "M5";
-  const candles = usePoll<{ candles: Candle[]; age_sec: number | null }>(`/api/candles?tf=${tf}`, 10000);
+  const candles = usePoll<{ candles: Candle[]; age_sec: number | null }>(
+    `/api/candles?tf=${tf}`,
+    10000,
+  );
 
   // sound alert when a new signal shows up
-  const seen = useRef<{ filter: Filter | null; id: string | null }>({ filter: null, id: null });
+  const seen = useRef<{ filter: Filter | null; id: string | null }>({
+    filter: null,
+    id: null,
+  });
   useEffect(() => {
     if (!signals.data) return;
     const top = signals.data.signals[0] ?? null;
@@ -75,7 +92,9 @@ export default function Dashboard() {
     setSound(next);
     try {
       localStorage.setItem("xs_sound", next ? "1" : "0");
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     if (next) beep();
   }
 
@@ -93,20 +112,34 @@ export default function Dashboard() {
       <div className="toolbar">
         <div className="tabs" role="tablist" aria-label="Signal mode">
           {FILTERS.map((f) => (
-            <button key={f.id} role="tab" aria-selected={filter === f.id}
-              className={`tab ${filter === f.id ? "active" : ""}`} onClick={() => { setFilter(f.id); setSelId(null); }}>
+            <button
+              key={f.id}
+              role="tab"
+              aria-selected={filter === f.id}
+              className={`tab ${filter === f.id ? "active" : ""}`}
+              onClick={() => {
+                setFilter(f.id);
+                setSelId(null);
+              }}
+            >
               {f.label}
             </button>
           ))}
         </div>
-        <button className={`btn ghost sm ${sound ? "on" : ""}`} onClick={toggleSound} aria-pressed={sound}>
+        <button
+          className={`btn ghost sm ${sound ? "on" : ""}`}
+          onClick={toggleSound}
+          aria-pressed={sound}
+        >
           {sound ? "🔔 Sound on" : "🔕 Sound off"}
         </button>
       </div>
 
       <StatsBar stats={stats.data} />
 
-      {signals.error && <div className="banner err">Can’t load signals: {signals.error}</div>}
+      {signals.error && (
+        <div className="banner err">Can’t load signals: {signals.error}</div>
+      )}
 
       <div className="grid-main">
         <section className="panel">
@@ -115,32 +148,69 @@ export default function Dashboard() {
               <h2>XAUUSD · {tf}</h2>
               <p className="muted small">
                 {age === null
-                  ? candles.data ? "No candles yet. Start the Python bot." : "Loading…"
+                  ? candles.data
+                    ? "No candles yet. Start the Python bot."
+                    : "Loading…"
                   : `Updated ${ageLabel(age)} ago · chart time is broker server time`}
               </p>
             </div>
             <div className="chips">
               {CHART_TFS.map((t) => (
-                <button key={t} className={`chip ${tf === t ? "active" : ""}`} onClick={() => setTfPick(t)}>{t}</button>
+                <button
+                  key={t}
+                  className={`chip ${tf === t ? "active" : ""}`}
+                  onClick={() => setTfPick(t)}
+                >
+                  {t}
+                </button>
               ))}
             </div>
           </div>
 
-          <SignalChart candles={candles.data?.candles ?? []} signal={selected} tf={tf} />
+          <SignalChart
+            candles={candles.data?.candles ?? []}
+            signal={selected}
+            tf={tf}
+          />
 
           {selected && (
             <div className="detail">
               <div className="detail-title">
-                <span className={`side ${selected.side.toLowerCase()}`}>{selected.side}</span>
-                <span className={`badge ${selected.mode}`}>{MODE_LABEL[selected.mode]}</span>
-                <span className="muted small">{selected.entry_tf} entry · {selected.trend_tf} trend</span>
+                <span className={`side ${selected.side.toLowerCase()}`}>
+                  {selected.side}
+                </span>
+                <span className={`badge ${selected.mode}`}>
+                  {MODE_LABEL[selected.mode]}
+                </span>
+                <span className="muted small">
+                  {selected.entry_tf} entry · {selected.trend_tf} trend
+                </span>
               </div>
               <div className="detail-grid mono">
-                <div><label>Entry</label><b>{fmtPrice(selected.entry)}</b></div>
-                <div><label>Stop loss</label><b className="neg">{fmtPrice(selected.sl)}</b></div>
-                <div><label>Take profit</label><b className="pos">{fmtPrice(selected.tp)}</b></div>
-                <div><label>Risk / Reward</label><b>${risk.toFixed(2)} / ${reward.toFixed(2)}</b></div>
-                <div><label>RSI / ATR</label><b>{selected.rsi ?? "–"} / {selected.atr ?? "–"}</b></div>
+                <div>
+                  <label>Entry</label>
+                  <b>{fmtPrice(selected.entry)}</b>
+                </div>
+                <div>
+                  <label>Stop loss</label>
+                  <b className="neg">{fmtPrice(selected.sl)}</b>
+                </div>
+                <div>
+                  <label>Take profit</label>
+                  <b className="pos">{fmtPrice(selected.tp)}</b>
+                </div>
+                <div>
+                  <label>Risk / Reward</label>
+                  <b>
+                    ${risk.toFixed(2)} / ${reward.toFixed(2)}
+                  </b>
+                </div>
+                <div>
+                  <label>RSI / ATR</label>
+                  <b>
+                    {selected.rsi ?? "–"} / {selected.atr ?? "–"}
+                  </b>
+                </div>
               </div>
             </div>
           )}
@@ -154,13 +224,25 @@ export default function Dashboard() {
           {signals.data && list.length === 0 && (
             <div className="empty">
               <b>Waiting for the first signal</b>
-              <p>The bot checks every closed candle during the London + New York session. Signals appear here the moment a rule fires.</p>
+              <p>
+                The bot checks every closed candle during the London + New York
+                session. Signals appear here the moment a rule fires.
+              </p>
             </div>
           )}
-          {!signals.data && !signals.error && <div className="empty"><p>Loading…</p></div>}
+          {!signals.data && !signals.error && (
+            <div className="empty">
+              <p>Loading…</p>
+            </div>
+          )}
           <div className="feed-list">
             {list.map((s) => (
-              <SignalCard key={s.id} s={s} active={selected?.id === s.id} onSelect={pickSignal} />
+              <SignalCard
+                key={s.id}
+                s={s}
+                active={selected?.id === s.id}
+                onSelect={pickSignal}
+              />
             ))}
           </div>
         </section>

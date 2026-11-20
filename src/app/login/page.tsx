@@ -40,7 +40,7 @@ export default function LoginPage() {
           <rect x="10" y="4" width="4" height="12" rx="1" fill="#e8b84a" />
           <rect x="17" y="7" width="4" height="10" rx="1" fill="#f6465d" />
         </svg>
-        <h1>XAU/USD Signals</h1>
+        <h1>ErosSmite Signals</h1>
         <p className="muted">Private dashboard. Enter your password.</p>
         <input
           type="password"
@@ -51,7 +51,9 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && <div className="banner err">{error}</div>}
-        <button className="btn gold" disabled={busy || !password}>{busy ? "Checking…" : "Sign in"}</button>
+        <button className="btn gold" disabled={busy || !password}>
+          {busy ? "Checking…" : "Sign in"}
+        </button>
       </form>
     </div>
   );
